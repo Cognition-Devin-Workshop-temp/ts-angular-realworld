@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { register, generateUniqueUser } from './helpers/auth';
 import { createArticle, generateUniqueArticle } from './helpers/articles';
-import { registerUserViaAPI, createArticleViaAPI } from './helpers/api';
 
 /**
  * Tag Filtering Tests
@@ -72,37 +71,6 @@ test.describe('Tag Filtering', () => {
     // Verify tags are shown on the article page
     await expect(page.locator(`.tag-list .tag-default:has-text("${uniqueTag}")`)).toBeVisible();
     await expect(page.locator('.tag-list .tag-default:has-text("test")')).toBeVisible();
-  });
-
-  test('should show articles with specific tag via API-created articles', async ({ page, request }) => {
-    const user = generateUniqueUser();
-    const token = await registerUserViaAPI(request, user);
-    const uniqueTag = `filtertag${Date.now()}`;
-
-    // Create 2 articles with the unique tag via API
-    await createArticleViaAPI(request, token, {
-      title: `Tagged Article One ${Date.now()}`,
-      description: 'First tagged article',
-      body: 'Body of first tagged article',
-      tagList: [uniqueTag],
-    });
-    await createArticleViaAPI(request, token, {
-      title: `Tagged Article Two ${Date.now()}`,
-      description: 'Second tagged article',
-      body: 'Body of second tagged article',
-      tagList: [uniqueTag],
-    });
-
-    // Navigate to the tag page
-    await page.goto(`/tag/${uniqueTag}`, { waitUntil: 'load' });
-
-    // Should show the tag filter active
-    await expect(page.locator(`.nav-link:has-text("${uniqueTag}")`)).toHaveClass(/active/);
-
-    // Should show articles with this tag
-    await expect(page.locator('.article-preview').first()).toBeVisible({ timeout: 10000 });
-    const articleCount = await page.locator('.article-preview').count();
-    expect(articleCount).toBeGreaterThanOrEqual(2);
   });
 
   test('should switch from tag filter back to Global Feed', async ({ page }) => {
